@@ -1,6 +1,7 @@
 from urllib import request
 import json
 import time
+import re
 """
 将车次字符串转换成数组
 """
@@ -18,7 +19,7 @@ def aoa(train):
 9 : 到达时间
 
 """
-def filter_train_by_time(train_arr, arr_after_time = "5:00", arr_before_time = '9:00'):
+def filter_train_by_time(train_arr, arr_after_time = "5:00", arr_before_time = '10:00'):
     arrive_time_index = 9
     def get_min(time_str):
         h, m = time_str.split(':')
@@ -38,7 +39,7 @@ start = input('从哪里来:')
 to = input('到哪里去:')
 start = start or '上海'
 to = to or '郑州'
-date = '2018-02-11'
+date = '2018-02-10'
 stations = read_station()# 车站和车站代码的转换
 sites = {"软卧":23,"无座":26,"硬卧":28,"硬座":29,"二等":30,"一等":31,"商务":32}# 数据的索引
 print('%s => %s' %(stations[start], stations[to]))
@@ -53,15 +54,14 @@ while True:
             trains = aoa(info['data']['result'])
             print('所有车次', len(trains))
             good_trains = filter_train_by_time(trains)
-            print('符合条件的车次',list(map(lambda item : item[3], good_trains)))# 符合时间段的车次信息
+            # print('符合条件的车次',list(map(lambda item : item[3], good_trains)))# 符合时间段的车次信息
             for train in good_trains:
                 yw, yz, wz = train[sites['硬卧']], train[sites['硬座']], train[sites['无座']]
-                print(yw, yz, wz)
-                if(yw != '无' or yz != '无' ):
+                if(re.match(r'有|\d+',yw) or re.match(r'有|\d+',yz)):
                     print('%s 有票了'%(train[3]))
                     print('\a')
         except json.decoder.JSONDecodeError as e:
             print('err')
         counter += 1
         print('====已查询%d次===='%(counter))
-        time.sleep(3)
+        time.sleep(2)

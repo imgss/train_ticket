@@ -37,13 +37,16 @@ def read_station():
 
 start = input('从哪里来:')
 to = input('到哪里去:')
+
 start = start or '上海'
-to = to or '郑州'
+to = to or '新乡'
 date = '2018-02-10'
 stations = read_station()# 车站和车站代码的转换
 sites = {"软卧":23,"无座":26,"硬卧":28,"硬座":29,"二等":30,"一等":31,"商务":32}# 数据的索引
-print('%s => %s' %(stations[start], stations[to]))
+sleep = 2# 请求时间间隔
 counter = 0
+print('%s => %s' %(stations[start], stations[to]))
+
 while True:
     with request.urlopen('https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=' + date + '&leftTicketDTO.from_station='+ stations[start]+'&leftTicketDTO.to_station='+stations[to]+'&purpose_codes=ADULT') as f:
         data = f.read()
@@ -56,12 +59,18 @@ while True:
             good_trains = filter_train_by_time(trains)
             # print('符合条件的车次',list(map(lambda item : item[3], good_trains)))# 符合时间段的车次信息
             for train in good_trains:
-                yw, yz, wz = train[sites['硬卧']], train[sites['硬座']], train[sites['无座']]
-                if(re.match(r'有|\d+',yw) or re.match(r'有|\d+',yz)):
-                    print('%s 有票了'%(train[3]))
+                yw, yz, wz, ed, yd = train[sites['硬卧']], train[sites['硬座']], train[sites['无座']], train[sites['二等']],  train[sites['一等']]
+                if re.match(r'有|\d+',yw):
+                    print('%s 硬卧有票'%(train[3]))
+                    print('\a')
+                elif re.match(r'有|\d+',yz):
+                    print('%s 硬座有票'%(train[3]))
+                    print('\a')
+                elif re.match(r'有|\d+', ed):
+                    print('%s 二等座有票'%(train[3]))
                     print('\a')
         except json.decoder.JSONDecodeError as e:
             print('err')
         counter += 1
         print('====已查询%d次===='%(counter))
-        time.sleep(2)
+        time.sleep(sleep)

@@ -19,15 +19,18 @@ def aoa(train):
 9 : 到达时间
 
 """
-def filter_train_by_time(train_arr, arr_after_time = "5:00", arr_before_time = '10:00'):
+def filter_train_by_time(train_arr, start_after = "8:00", start_before = "22:00", arr_after = "5:00", arr_before = '10:00'):
     arrive_time_index = 9
+    start_time_index = 8
     def get_min(time_str):
         h, m = time_str.split(':')
         return int(h) * 60 + int(m)
-    early = get_min(arr_after_time)
-    late = get_min(arr_before_time)
+    early = get_min(arr_after)
+    late = get_min(arr_before)
+    start_early = get_min(start_after)
+    start_late = get_min(start_before)
     def is_good(train):
-        return  early < get_min(train[arrive_time_index]) < late
+        return  early < get_min(train[arrive_time_index]) < late and start_early < get_min(train[start_time_index]) < start_late
     return filter(is_good, train_arr)
 
 def read_station():
@@ -39,8 +42,8 @@ start = input('从哪里来:')
 to = input('到哪里去:')
 
 start = start or '上海'
-to = to or '新乡'
-date = '2018-02-10'
+to = to or '郑州'
+date = '2018-02-13'
 stations = read_station()# 车站和车站代码的转换
 sites = {"软卧":23,"无座":26,"硬卧":28,"硬座":29,"二等":30,"一等":31,"商务":32}# 数据的索引
 sleep = 2# 请求时间间隔
@@ -49,7 +52,10 @@ print('%s => %s' %(stations[start], stations[to]))
 
 while True:
     with request.urlopen('https://kyfw.12306.cn/otn/leftTicket/queryZ?leftTicketDTO.train_date=' + date + '&leftTicketDTO.from_station='+ stations[start]+'&leftTicketDTO.to_station='+stations[to]+'&purpose_codes=ADULT') as f:
-        data = f.read()
+        try:
+            data = f.read()
+        except:
+            print('read err')
         stations = read_station()
         print('Status:', f.status, f.reason)
         try: 
